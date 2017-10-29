@@ -164,6 +164,9 @@ play:           mov         r1,frase30      ;'Digite uma sequencia de 4 digitos$
                 call        verficar        ;Verifica a resposta
                 call        printGame       ;gera a saida da jogada
                 call        winCond         ;vericica se foi atingido a condição de vitória
+
+
+
                 mov         r5,88FFh        ;POnto unico para debug
                 cmp         r7,r0
                 jmp.nz      win             ;vai para a vitória
@@ -578,32 +581,31 @@ pGameEnd:       call        newl
 ;Rotina : winCond   *funcão de ação global no jogo (não restaura o valor de r7              ;
 ;-==-   -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-;
 
-winCond:        push        r3
+winCond:        push        r4
+                push        r3
                 push        r2
                 push        r1
-
                 mov         r1,charx
                 mov         r2,stat
-                mov         r3,m[r2]
-                cmp         r3,r1
-                br.nz       winCondEnd
-                inc         r2
-                mov         r3,m[r2]
-                cmp         r3,r1
-                br.nz       winCondEnd
-                inc         r2
-                mov         r3,m[r2]
-                cmp         r3,r1
-                br.nz       winCondEnd
-                inc         r2
-                mov         r3,m[r2]
-                cmp         r3,r1
-                br.nz       winCondEnd
+                mov         r4,size
 
-                mov         r7,1
+
+winCondL:       cmp         r4,r0
+                br.z        winCondEnd1
+                mov         r3,m[r2]
+                inc         r2
+                dec         r4
+                cmp         r3,r1
+                br.nz       winCondL
+                br          winCondEnd
+
+
+
+winCondEnd1:    mov         r7,1
 winCondEnd:     pop         r1
                 pop         r2
                 pop         r3
+                pop         r4
                 ret
 
 
