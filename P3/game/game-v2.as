@@ -16,11 +16,22 @@
 ;-==-   -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-;
 ;START          MID         END                                                                 ;
 ;-==-   -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-;
+
+;Parameter's about the code :
+
 size            equ         4               ;Tamanho da senha
 maxj            equ         12              ;Maximo de jogadas permitidas
 msp             equ         FDFFh           ; SP = FDFFh (Padrao)
 
                 ORIG        8000h           ; (Data)
+
+                ;variaveis
+
+pass            tab         4               ;alocacao de memoria para a senha do jogo
+ans             tab         4               ;alocacao de memoria para a resposta do jogador
+stat            tab         4               ;alocacao de memoria para a estado da jogada
+charo           word        'o'             ;ascii certo porem na ordem errada
+charx           word        'x'             ;ascii certo porem na ordem certa
 
 ;senhas fixas para teste
 
@@ -42,15 +53,8 @@ frase40         str         'Sequencia invalida'
 frase50         str         'Resultado da rodada'
 frase60         str         'Voce ganhou'
 
-;variaveis
 
-pass            tab         4               ;alocacao de memoria para a senha do jogo
-ans             tab         4               ;alocacao de memoria para a resposta do jogador
-stat            tab         4               ;alocacao de memoria para a estado da jogada
-charo           word        'o'             ;ascii certo porem na ordem errada
-charx           word        'x'             ;ascii certo porem na ordem certa
 
-;Parameter's about the code :
 
 ;-==-   -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-;
 ;START          MID         END                                                             ;
@@ -151,11 +155,11 @@ verficar:       push        r1              ;Salve registro em uso
                 push        r7              ;Salve registro em uso
 
                 call        verfSet
-                br          verfMid1
+                ; br          verfMid1
 
 verfMid1:       cmp         r6,r0           ;Implementação correta
                 br.z        verficar2
-                dec         r6              ;reduz o Numero de repetições
+                dec         r6              ;reduz o contador de repetições
                 cmp         r2,r4
                 call.z      verfOkeiX       ;
                 inc         r1
@@ -164,29 +168,37 @@ verfMid1:       cmp         r6,r0           ;Implementação correta
                 call        verfMemo
                 br          verfMid1
 
-verficar2:      call        verfSet
-                mov         r7,size         ;Contador de repetições ii
-                br          verfMid2
+; verficar2:      call        verfSet         ;Remover na versão final
+verficar2:      mov         r7,size         ;Contador de repetições ii
+                mov         r5,stat
+                ; br          verfMid2
 
-verfMid2:       cmp         r7,r0           ; For [i] ; /* FIXME */
+verfMid2:       cmp         r7,r0           ; For [i]
                 br.z        verfEnd
-                call        verfMid2a
+                call        verfMid2a       ; Chamada do For[ii]
                 dec         r7
                 inc         r5
                 br          verfMid2
 
-verfMid2a:      cmp         r6,r0           ; For [ii]
+
+verfMid2a:      push        r5              ;Guarda r5 na pilha
+                call        verfSet         ;rotina que reseta e seta contadores e variaveis
+                pop         r5              ;Retorna r5 da pilha, pois esse é o unico que não deve ser mudado
+
+verfMid2b:      cmp         r6,r0           ;Contador para o For[ii]
                 br.z        verfMid2ar
-                dec         r6
+                cmp         r0,m[r5]
+                br.nz       verfMid2ar
+
+                dec         r6              ;reduz o contador de repetições
                 cmp         r2,r4
                 call.z      verfOkeiO       ;
-                inc         r1
                 inc         r3
+                mov         r4,m[r3]
+                br          verfMid2b
 
-                call        verfMemo
-                br          verfMid2a
 
-verfMid2ar:     ret
+verfMid2ar:     ret                         ;saida do ciclo For[ii] ou o Pass do python
 
 
 
