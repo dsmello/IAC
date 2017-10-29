@@ -27,6 +27,7 @@ lmt             equ         '$'             ;Character para final de strings, N�
 IO              equ         FFFEh           ;endereço da saida de texto
 NL              equ         000Ah           ;caracter de quebra de linha
 
+
                 ORIG        8000h           ; (Data)
 
                 ;variaveis
@@ -34,8 +35,11 @@ NL              equ         000Ah           ;caracter de quebra de linha
 pass            tab         4               ;alocacao de memoria para a senha do jogo
 ans             tab         4               ;alocacao de memoria para a resposta do jogador
 stat            tab         4               ;alocacao de memoria para a estado da jogada
+string          tab         32              ;alocacao de memoria para a geração de strings dinamicas
+
 charo           word        'o'             ;ascii certo porem na ordem errada
 charx           word        'x'             ;ascii certo porem na ordem certa
+
 
 ;senhas fixas para teste
 
@@ -291,8 +295,18 @@ printEnd:       pop         r1
 ;-==-   -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-;
 
 
+;-==-   -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-;
+;rotina : nl *adiciona uma quebra de lina no texto                                          ;
+;-==-   -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-;
+nl:             push        r1
+                mov         r1, NL
+                mov         M[IO], R1
+                pop         r1
+                ret
 
-
+;-==-   -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-;
+;Fim da rotina : nl                                                                         ;
+;-==-   -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-;
 
 
 
