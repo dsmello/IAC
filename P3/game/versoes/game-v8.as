@@ -42,6 +42,7 @@ ans             tab         4               ;alocacao de memoria para a resposta
 stat            tab         4               ;alocacao de memoria para a estado da jogada
 ; string          tab         32              ;alocacao de memoria para a geração de strings dinamicas  ; não implementado
 roll            tab         1               ;alocacao de memoria para a contagem de estados
+winer           tab         1
 
 charo           word        'o'             ;ascii certo porem na ordem errada
 
@@ -164,11 +165,30 @@ play:           mov         r1,frase30      ;'Digite uma sequencia de 4 digitos$
                 call        verficar        ;Verifica a resposta
                 call        printGame       ;gera a saida da jogada
                 call        winCond         ;vericica se foi atingido a condição de vitória
+
+
+
                 mov         r5,88FFh        ;POnto unico para debug
                 cmp         r7,r0
                 jmp.nz      win             ;vai para a vitória
                 cmp         r6,maxj
                 jmp.z       lost            ;vai para a derrotá
+
+                push        r1
+
+                mov         r1,stat
+                mov         m[r1],r0
+                inc         r1
+                mov         m[r1],r0
+                inc         r1
+                mov         m[r1],r0
+                inc         r1
+                mov         m[r1],r0
+                mov         m[winer],r0
+
+                pop         r1
+
+
                 inc         r6
                 jmp         play            ;retorna a jogada
 
@@ -276,11 +296,19 @@ verfMid1:       cmp         r6,r0           ;Implementação correta
                 dec         r6              ;reduz o contador de repetições
                 cmp         r2,r4
                 call.z      verfOkeiX       ;
+                ; cmp         r2,r4
+                ; call.nz     setWiner
                 inc         r1
                 inc         r3
                 inc         r5
                 call        verfMemo
                 br          verfMid1
+
+; setWiner:       push        r1
+;                 mov         r1,1
+;                 mov         m[winer],r1
+;                 pop         r1
+;                 ret
 
 ; verficar2:      call        verfSet         ;Remover na versão final
 verficar2:      mov         r7,size         ;Contador de repetições ii
@@ -401,7 +429,7 @@ newl:           push        r1
 
 
 ;-==-   -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-;
-;rotina : random                                                                            ;
+;rotina : random       FIXME    GERADOR DE ALIATORIEDADES                                   ;
 ;-==-   -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-;
 random:         push        r1              ;Salve registro em uso
                 push        r2              ;Salve registro em uso
@@ -409,21 +437,46 @@ random:         push        r1              ;Salve registro em uso
                 push        r4              ;Salve registro em uso
                 push        r5              ;Salve registro em uso
                 push        r6              ;Salve registro em uso
-                push        r7              ;Salve registro em uso
 
-                mov         r1,0
+
+                mov         r1,1337         ;Set o tempo para o contador
+                mov         r2,1            ;Comando de Liga ou Desliga
+                mov         r3,0            ;registro aonde se encontrara o tempo restante
+                mov         r4,6            ;Dividendo da operação
+                mov         r5,pass         ;Endereço da memoria da senha do jogo
+
+                mov         m[tempTime],r1
                 mov         r2,1
-                mov         r3,pass
-                mov         m[r3],r1
-                inc         r3
-                mov         m[r3],r1
-                inc         r3
-                mov         m[r3],r1
-                inc         r3
-                mov         m[r3],r1
+                mov         m[tempStart],r2
 
-randomEnd:      pop         r7              ;Reestaura o estado do registro
-                pop         r6              ;Reestaura o estado do registro
+                mov         r3,m[tempTime]  ;Numeros aleatorios para a senha do jogo
+                mov         r4,6
+                div         r3,r4
+                mov         m[r5],r4
+                inc         r5
+
+                mov         r4,6
+                div         r3,r4
+                mov         m[r5],r4
+                inc         r5
+
+
+                mov         r4,6
+                div         r3,r4
+                mov         m[r5],r4
+                inc         r5
+
+
+                mov         r4,6
+                div         r3,r4
+                mov         m[r5],r4
+
+                mov         r2,0
+                mov         m[tempStart],r2
+
+
+
+randomEnd:      pop         r6              ;Reestaura o estado do registro
                 pop         r5              ;Reestaura o estado do registro
                 pop         r4              ;Reestaura o estado do registro
                 pop         r3              ;Reestaura o estado do registro
@@ -466,18 +519,24 @@ input:          push        r1              ;Salve registro em uso
                 push        r4              ;Salve registro em uso
                 push        r5              ;Salve registro em uso
 
+                mov         r1,r0           ;Limpar qualquer informação
+                mov         r2,r0           ;
+                mov         r3,r0           ;
+                mov         r4,r0           ;
+
                 mov         r5,m[sp+7]
                 push        r5
                 call        delay
 
                 mov         r5,ans          ;não foi criado nenhum loop, pois não haveria grandes ganhos
-                mov         r1,m[r5]
+                mov         m[r5],r1
                 inc         r5
-                mov         r2,m[r5]
+                mov         m[r5],r2
                 inc         r5
-                mov         r3,m[r5]
+                mov         m[r5],r3
                 inc         r5
-                mov         r4,m[r5]
+                mov         m[r5],r4
+
 
 inputEnd:       pop         r5              ;Reestaura o estado do registro
                 pop         r4              ;Reestaura o estado do registro
@@ -578,32 +637,36 @@ pGameEnd:       call        newl
 ;Rotina : winCond   *funcão de ação global no jogo (não restaura o valor de r7              ;
 ;-==-   -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-    -==-;
 
-winCond:        push        r3
+winCond:        push        r4
+                push        r3
                 push        r2
                 push        r1
-
                 mov         r1,charx
                 mov         r2,stat
-                mov         r3,m[r2]
-                cmp         r3,r1
-                br.nz       winCondEnd
-                inc         r2
-                mov         r3,m[r2]
-                cmp         r3,r1
-                br.nz       winCondEnd
-                inc         r2
-                mov         r3,m[r2]
-                cmp         r3,r1
-                br.nz       winCondEnd
-                inc         r2
-                mov         r3,m[r2]
-                cmp         r3,r1
-                br.nz       winCondEnd
+                mov         r4,size
 
-                mov         r7,1
+
+
+ winCondL:       cmp         r4,r0
+                 br.z        winCondEnd1
+                 mov         r3,m[r2]
+                 cmp         r3,r0
+                 br.z        winCondEnd
+                 cmp         r3,charo
+                 br.z        winCondEnd
+                 inc         r2
+                 dec         r4
+                 br          winCondL
+
+                ;cmp         r0,m[winer]
+                ;br.nz       winCondEnd
+
+
+winCondEnd1:    mov         r7,1
 winCondEnd:     pop         r1
                 pop         r2
                 pop         r3
+                pop         r4
                 ret
 
 
